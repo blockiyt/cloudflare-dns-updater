@@ -2,8 +2,10 @@ const axios = require('axios')
 const publicIp = require('public-ip')
 const configFile = require('./config.json')
 const fs = require('fs')
+const debug = false
 
 async function update(config, index) {
+
   try {
     // Load Config
     if (!config.hostname) {
@@ -23,19 +25,22 @@ async function update(config, index) {
       throw Error('Bearer Token or (Email + Key) missing')
     }
 
+    console.log("DNS Record update for", config.hostname + "...")
+
     // Get Zone ID
     const cfZoneIdReqUrl = `https://api.cloudflare.com/client/v4/zones?name=${encodeURI(`${config.hostname.split('.').reverse()[1]}.${config.hostname.split('.').reverse()[0]}`)}`
     const cfZoneIdRes = await axios.get(cfZoneIdReqUrl, { headers: cfAuthHeaders })
     if (cfZoneIdRes.data.result.length <= 0) { throw Error('Zone not found') }
     const cfZoneId = cfZoneIdRes.data.result[0].id
-    console.log('Zone ID: ', cfZoneId)
+    if(debug){console.log('Zone ID:', cfZoneId)}
+
 
     // Get DNS Record ID
     const cfDnsIdReqUrl = `https://api.cloudflare.com/client/v4/zones/${encodeURI(cfZoneId)}/dns_records?name=${encodeURI(config.hostname)}`
     const cfDnsIdRes = await axios.get(cfDnsIdReqUrl, { headers: cfAuthHeaders })
     if (cfDnsIdRes.data.result.length <= 0) { throw Error('DNS record not found') }
     const results = await Promise.all(cfDnsIdRes.data.result.map(async cfDnsRecord => {
-      console.log('DNS Record ID: ', cfDnsRecord.id)
+      if(debug){console.log('DNS Record ID:', cfDnsRecord.id)}
       let content
       switch (cfDnsRecord.type) {
         case 'A':
@@ -45,10 +50,12 @@ async function update(config, index) {
           content = await publicIp.v6()
           break
         default:
-          console.error(`DNS Record Type unsupported: ${cfDnsRecord.type}`)
+          if(debug){console.error(`DNS Record Type unsupported: ${cfDnsRecord.type}`)}
+
           return
       }
 
+      //save old ip in config
       config.oldIP = content;
       configFile[index] = config;
       fs.writeFileSync('./config.json', JSON.stringify(configFile, null, 4))
@@ -67,13 +74,15 @@ async function update(config, index) {
     }))
     results.forEach(result => {
       if (!result || !result.data) {
-        console.error(`Warning: null result received, see above for error messages`)
+        if(debug){
+          console.error(`Warning: null result received, see above for error messages`)
+        }
         return
       }
       if (result.data.success === true) {
-        console.log(`DNS Record update success: `, JSON.stringify(result.data, undefined, 2))
+        console.log(`DNS Record update for ` + config.hostname + ` is success! `, debug ? JSON.stringify(result.data, undefined, 2) : "")
       } else {
-        console.error(`DNS Record update failed: `, JSON.stringify(result.data.errors, undefined, 2))
+        console.error(`DNS Record update for ` + config.hostname + ` failed: `, JSON.stringify(result.data.errors, undefined, 2))
       }
     })
   } catch (e) {
