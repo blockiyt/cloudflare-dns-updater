@@ -7,7 +7,7 @@ NodeJS Script for updating CloudFlare DNS record of servers with dynamic IP.
 ## Usage
 ### Setup
 ```sh
-$ git clone git@github.com:chihimng/cloudflare-dns-updater.git
+$ git clone https://github.com/blockiyt/cloudflare-dns-updater.git
 $ cd cloudflare-dns-updater
 $ npm install
 ```
@@ -16,10 +16,16 @@ Fill in your hostname and api key in `config.json`
 Generate an api key at [API Tokens Page](https://dash.cloudflare.com/profile/api-tokens), select Zone DNS Edit permission
 #### Sample JSON
 ```json
-{
-  "hostname": "homelab.example.com",
-  "bearerToken": "..."
-}
+[
+  {
+    "hostname": "",
+    "bearerToken": ""
+  },
+  {
+    "hostname": "",
+    "bearerToken": ""
+  }
+]
 ```
 
 In legacy versions we used the global api key to authenticate with Cloudflare API, see [the legacy sample here](./config.json.legacy.sample)
