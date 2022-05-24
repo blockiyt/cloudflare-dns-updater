@@ -1,5 +1,7 @@
-{
-  "hostname": "",
-  "email": "",
-  "token": ""
-}
+[
+    {
+      "hostname": "",
+      "email": "",
+      "token": ""
+    }
+]

@@ -1,11 +1,12 @@
 const axios = require('axios')
 const publicIp = require('public-ip')
-const config = require('./config.json')
+const configFile = require('./config.json')
+const fs = require('fs')
 
-async function main () {
+async function update(config, index) {
   try {
     // Load Config
-    if (!config.hostname) { 
+    if (!config.hostname) {
       throw Error('Hostname missing')
     }
     let cfAuthHeaders = {}
@@ -47,13 +48,21 @@ async function main () {
           console.error(`DNS Record Type unsupported: ${cfDnsRecord.type}`)
           return
       }
+
+      config.oldIP = content;
+      configFile[index] = config;
+      fs.writeFileSync('./config.json', JSON.stringify(configFile, null, 4))
+
+
       // Update DNS Record
       const cfPutReqUrl = `https://api.cloudflare.com/client/v4/zones/${encodeURI(cfZoneId)}/dns_records/${encodeURI(cfDnsRecord.id)}`
       const cfPutReqData = {
         'type': cfDnsRecord.type,
         'name': cfDnsRecord.name,
-        'content': content
+        'content': content,
+        'proxied': cfDnsRecord.proxied
       }
+
       return axios.put(cfPutReqUrl, cfPutReqData, { headers: cfAuthHeaders })
     }))
     results.forEach(result => {
@@ -73,4 +82,18 @@ async function main () {
 }
 
 // entry
-main()
+configFile.forEach((element, index) => {
+  if(element.oldIP === undefined){
+    update(element, index)
+  }else{
+    const oldIP = element.oldIP;
+
+    publicIp.v4().then(newIP => {
+      if(oldIP === newIP){
+        console.log("For the Domain " + element.hostname + " is no update necessary.")
+      }else {
+        update(element, index)
+      }
+    })
+  }
+});

@@ -1,4 +1,6 @@
-{
-  "hostname": "",
-  "bearerToken": ""
-}
+[
+  {
+    "hostname": "",
+    "bearerToken": ""
+  }
+]
