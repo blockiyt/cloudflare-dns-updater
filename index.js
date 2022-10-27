@@ -1,7 +1,7 @@
-const axios = require('axios')
-const publicIp = require('public-ip')
-const configFile = require('./config.json')
-const fs = require('fs')
+import {publicIpv4, publicIpv6} from 'public-ip';
+import axios from "axios";
+import configFile from './config.json' assert {type: 'json'};
+import fs from 'fs'
 const debug = false
 
 async function update(config, index) {
@@ -44,10 +44,10 @@ async function update(config, index) {
       let content
       switch (cfDnsRecord.type) {
         case 'A':
-          content = await publicIp.v4()
+          content = await publicIpv4()
           break
         case 'AAAA':
-          content = await publicIp.v6()
+          content = await publicIpv6()
           break
         default:
           if(debug){console.error(`DNS Record Type unsupported: ${cfDnsRecord.type}`)}
@@ -97,7 +97,7 @@ configFile.forEach((element, index) => {
   }else{
     const oldIP = element.oldIP;
 
-    publicIp.v4().then(newIP => {
+    publicIpv4().then(newIP => {
       if(oldIP === newIP){
         console.log("For the Domain " + element.hostname + " is no update necessary.")
       }else {

@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "NodeJS script for updating cloudflare dns record",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
